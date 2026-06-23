@@ -4,6 +4,7 @@ target/
 !**/src/test/**/target/
 
 out/
+cards.json
 
 ### IntelliJ IDEA ###
 .idea/modules.xml
