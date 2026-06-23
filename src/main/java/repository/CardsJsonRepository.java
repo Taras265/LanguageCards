@@ -2,14 +2,12 @@ package repository;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import models.Card;
-import dto.CardDTO;
-import mapper.CardMapper;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.stream.Collectors;
 
 public class CardsJsonRepository implements CardsRepositoryInterface {
 
@@ -21,6 +19,7 @@ public class CardsJsonRepository implements CardsRepositoryInterface {
     private ArrayList<Card> cache = new ArrayList<>();
 
     private CardsJsonRepository() {
+        mapper.registerModule(new JavaTimeModule());
         load();
     }
 
@@ -32,15 +31,7 @@ public class CardsJsonRepository implements CardsRepositoryInterface {
         if (!file.exists()) return;
 
         try {
-            ArrayList<CardDTO> dtos = mapper.readValue(
-                    file,
-                    new TypeReference<ArrayList<CardDTO>>() {}
-            );
-
-            cache = dtos.stream()
-                    .map(CardMapper::fromDTO)
-                    .collect(Collectors.toCollection(ArrayList::new));
-
+            cache = mapper.readValue(file, new TypeReference<ArrayList<Card>>() {});
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -48,13 +39,7 @@ public class CardsJsonRepository implements CardsRepositoryInterface {
 
     private void save() {
         try {
-            ArrayList<CardDTO> dtos = cache.stream()
-                    .map(CardMapper::toDTO)
-                    .collect(Collectors.toCollection(ArrayList::new));
-
-            mapper.writerWithDefaultPrettyPrinter()
-                    .writeValue(file, dtos);
-
+            mapper.writerWithDefaultPrettyPrinter().writeValue(file, cache);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

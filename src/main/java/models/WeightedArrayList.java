@@ -85,6 +85,10 @@ public class WeightedArrayList<T> {
         return list.toString();
     }
 
+    public ArrayList<Item<T>> getList() {
+        return list;
+    }
+
     public static class Item<T> {
         private T item;
         private double weight;
@@ -116,4 +120,5 @@ public class WeightedArrayList<T> {
             return item + " : " + weight;
         }
     }
+
 }

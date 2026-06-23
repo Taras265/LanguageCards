@@ -2,6 +2,11 @@ package models;
 
 import ai.AIServiceInterface;
 import ai.GeminiService;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -18,11 +23,16 @@ public class Card {
     private int repetitions = 0;
     private int interval = 0;
     private double ef = startEF; // ease factor
+
+    @JsonSerialize(using = LocalDateSerializer.class)
+    @JsonDeserialize(using = LocalDateDeserializer.class)
     private LocalDate nextReview = LocalDate.now();
     private double stability = 1.0;   // "устойчивость памяти"
     private double difficulty = 1.0;  // сложность карточки
 
+    @JsonIgnore
     public static final double startEF = 2.5;
+    @JsonIgnore
     private final AIServiceInterface ai = GeminiService.getInstance();
 
     public Card() {
@@ -89,6 +99,7 @@ public class Card {
         this.level = level;
     }
 
+    @JsonIgnore
     public Task getTask() {
         return switch (level) {
             case 1 -> firstLevelTask();
@@ -97,6 +108,7 @@ public class Card {
         };
     }
 
+    @JsonIgnore
     public boolean isDue() {
         return !LocalDate.now().isBefore(nextReview);
     }
@@ -234,6 +246,7 @@ public class Card {
         this.difficulty = difficulty;
     }
 
+    @JsonIgnore
     private double getLevelMod() {
         if (level == 1) {
             return 1;
