@@ -7,17 +7,24 @@ import model.Card;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 
 public class CardsJsonRepository implements CardsRepositoryInterface {
 
     private final File file = new File("cards.json");
+    private final File backupDir = new File("backups");
     private final ObjectMapper mapper = new ObjectMapper();
 
     private ArrayList<Card> cache = new ArrayList<>();
 
     public CardsJsonRepository() {
         mapper.registerModule(new JavaTimeModule());
+        if (!backupDir.exists()) {
+            backupDir.mkdirs();
+        }
         load();
     }
 
@@ -34,8 +41,29 @@ public class CardsJsonRepository implements CardsRepositoryInterface {
     private void save() {
         try {
             mapper.writerWithDefaultPrettyPrinter().writeValue(file, cache);
+
+            String todayStr = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE);
+            File backupFile = new File(backupDir, "cards_" + todayStr + ".json");
+            mapper.writerWithDefaultPrettyPrinter().writeValue(backupFile, cache);
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void restoreFromDate(LocalDate date) {
+        String dateStr = date.format(DateTimeFormatter.ISO_LOCAL_DATE);
+        File backupFile = new File(backupDir, "cards_" + dateStr + ".json");
+
+        if (!backupFile.exists()) {
+            throw new IllegalArgumentException("Бэкап за дату " + dateStr + " не найден.");
+        }
+
+        try {
+            cache = mapper.readValue(backupFile, new TypeReference<ArrayList<Card>>() {});
+            mapper.writerWithDefaultPrettyPrinter().writeValue(file, cache);
+        } catch (IOException e) {
+            throw new RuntimeException("Не удалось восстановить данные: " + e.getMessage(), e);
         }
     }
 
