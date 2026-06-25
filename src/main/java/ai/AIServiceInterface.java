@@ -1,7 +1,7 @@
 package ai;
 
 import java.util.ArrayList;
-import models.Card;
+import model.Card;
 
 public interface AIServiceInterface {
     void addWord(String word);

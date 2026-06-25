@@ -1,14 +1,20 @@
 package app;
 
 import controller.CardController;
-import models.Card;
-import models.Task;
+import factory.TaskFactory;
+import model.Card;
+import model.Task;
+import repition.Sm2Scheduler;
 
 import java.util.ArrayList;
 import java.util.Scanner;
 
 public class ConsoleApp {
-    CardController cardController = CardController.getInstance();
+    CardController cardController;
+
+    public ConsoleApp(CardController cardController) {
+        this.cardController = cardController;
+    }
 
     public void start(int maxCards) {
         System.out.println("Приветствую в приложении \"Language Card\"!");
@@ -52,15 +58,10 @@ public class ConsoleApp {
 
         System.out.println("Грузим карточки... Извините, если это займет какое то время >.<");
         cardController.createCards();
-        ArrayList<Card> cards = cardController.getTodayCards(
-                (int) Math.ceil(maxCards*0.2),
-                (int) Math.ceil(maxCards*0.3),
-                (int) Math.ceil(maxCards*0.4),
-                (int) Math.ceil(maxCards*0.1)
-        );
+        ArrayList<Card> cards = cardController.getTodayCards(maxCards);
         while (!cards.isEmpty()) {
             for (Card card : cards) {
-                Task task = card.getTask();
+                Task task = cardController.getTaskForCard(card);
 
                 System.out.println(task.getTask());
                 input.nextLine();
@@ -73,20 +74,16 @@ public class ConsoleApp {
                 System.out.println("\t 1 - Почти не помню");
                 System.out.println("\t 0 - Не помню");
 
-                while (true) {
+                do {
                     choice = input.nextLine();
-                    if (choice.equals("0") ||
-                            choice.equals("1") ||
-                            choice.equals("2") ||
-                            choice.equals("3") ||
-                            choice.equals("4") ||
-                            choice.equals("5")) {
-                        card.completeTask(Integer.parseInt(choice), task.getLevel());
-                        break;
-                    }
-                }
+                } while (!choice.equals("0") &&
+                        !choice.equals("1") &&
+                        !choice.equals("2") &&
+                        !choice.equals("3") &&
+                        !choice.equals("4") &&
+                        !choice.equals("5"));
 
-                cardController.updateCard(card);
+                cardController.reviewCard(card, Integer.parseInt(choice), task.getLevel());
                 System.out.println("Следующий повтор: " + card.getNextReview());
             }
             cards.removeIf(c -> !c.isDue());

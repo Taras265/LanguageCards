@@ -1,4 +1,4 @@
-package models;
+package model;
 
 import ai.AIServiceInterface;
 import ai.GeminiService;
@@ -10,7 +10,6 @@ import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Collections;
 
 public class Card {
     private String word;
@@ -30,10 +29,8 @@ public class Card {
     private double stability = 1.0;   // "устойчивость памяти"
     private double difficulty = 1.0;  // сложность карточки
 
-    @JsonIgnore
     public static final double startEF = 2.5;
-    @JsonIgnore
-    private final AIServiceInterface ai = GeminiService.getInstance();
+    public static final int MAXLEVEL = 3;
 
     public Card() {
         this.examples = new WeightedArrayList<>();
@@ -84,7 +81,7 @@ public class Card {
     }
 
     public void levelUp() {
-        if (level < 3 && nextReview.isAfter(LocalDate.now())) {
+        if (level < MAXLEVEL && nextReview.isAfter(LocalDate.now())) {
             level++;
         }
     }
@@ -100,101 +97,15 @@ public class Card {
     }
 
     @JsonIgnore
-    public Task getTask() {
-        return switch (level) {
-            case 1 -> firstLevelTask();
-            case 2 -> secondLevelTask();
-            default -> thirdLevelTask();
-        };
-    }
-
-    @JsonIgnore
     public boolean isDue() {
         return !LocalDate.now().isBefore(nextReview);
     }
 
-    public void completeTask(int quality, int taskLevel) {
-        applySm2(quality);
-        if (taskLevel < level && repetitions == 0) {
-            levelDown();
-        }
-        if (repetitions >= 6*level && level < 3) {
-            levelUp();
-            repetitions = 0;
-            ef = startEF;
-        }
+    public void addExamples(ArrayList<String> e) {
+        examples.addFromList(e);
     }
 
-    private void applySm2(int quality) {
-        // обновляем ef
-        ef = ef + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02));
-        ef = Math.max(1.3, ef);
-
-        // обновляем difficulty
-        difficulty += (5 - quality) * 0.1;
-        difficulty = Math.max(0.5, Math.min(difficulty, 3.0));
-
-        // обновляем stability
-        if (quality < 3) {
-            stability *= 0.5; // стабильность резко падает
-            repetitions = 0;
-        } else {
-            stability *= ef;  // рост экспоненциальный у стабильности
-            repetitions++;
-        }
-
-        interval = (int) Math.round((stability * getLevelMod()) / difficulty);
-
-        if (interval < 1) {
-            interval = 1;
-        } else {
-            System.out.println(interval);
-            nextReview = LocalDate.now().plusDays(interval);
-        }
-    }
-
-    private Task firstLevelTask() {
-        ArrayList<String> taskArguments = new ArrayList<>();
-        taskArguments.add(word);
-        taskArguments.add(description);
-        Collections.shuffle(taskArguments);
-        return new Task(taskArguments.getFirst(), taskArguments.getLast(), 1);
-    }
-
-    private Task secondLevelTask() {
-        String example = examples.getRandom();
-
-        while (example == null) {
-            addNewExample();
-            example = examples.getRandom();
-        }
-
-        example = example.replaceAll(word, "---");
-        example = example + "\n\n" + description;
-        return new Task(example, word, 2);
-    }
-
-    private Task thirdLevelTask() {
-        String m = mastery.getFirst();
-        mastery.removeFirst();
-
-        if (mastery.isEmpty()) {
-            addNewMastery();
-        }
-
-        String task = "Create sentence with using word \"" + word + "\"\n" + m;
-        return new Task(task, "", 3);
-    }
-
-    private void addNewExample() {
-        ArrayList<String> s = ai.createExamples(word);
-        for (String e: s) {
-            examples.add(e);
-        }
-    }
-
-    private void addNewMastery() {
-        ArrayList<String> s = ai.createMasteries(word);
+    public void addMastery(ArrayList<String> s) {
         mastery.addAll(s);
     }
 
@@ -247,7 +158,7 @@ public class Card {
     }
 
     @JsonIgnore
-    private double getLevelMod() {
+    public double getLevelMod() {
         if (level == 1) {
             return 1;
         } else if (level == 2) {

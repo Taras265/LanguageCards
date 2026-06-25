@@ -1,4 +1,4 @@
-package models;
+package model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -67,18 +67,6 @@ public class WeightedArrayList<T> {
                 item.setWeight(weight + (delta * (weight / (1-(delta*2)))));
             }
         }
-    }
-
-    public Item<T> getRaw(int index) {
-        return list.get(index);
-    }
-
-    public void clear() {
-        list.clear();
-    }
-
-    public void addDirect(T item, double weight) {
-        list.add(new Item<>(item, weight));
     }
 
     public String toString() {

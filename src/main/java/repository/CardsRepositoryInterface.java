@@ -1,6 +1,6 @@
 package repository;
 
-import models.Card;
+import model.Card;
 
 import java.util.ArrayList;
 

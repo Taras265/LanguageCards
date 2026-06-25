@@ -5,15 +5,14 @@ import com.google.genai.types.GenerateContentResponse;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import models.Card;
+import model.Card;
 
 public class GeminiService implements AIServiceInterface {
     private HashSet<String> words = new HashSet<>();
     private final Client client = Client.builder()
             .apiKey(System.getenv("GEMINI_API_KEY")).build();
-    private final String model = "gemini-2.5-flash";
-
-    private static final GeminiService instance = new GeminiService();
+    // private final String model = "gemini-2.5-flash";
+    private final String model = "gemini-2.5-flash-lite";
 
     private static final String createCardsPrompt =
             "Я буду кидать тебе слово или несколько слова на английском. " +
@@ -63,7 +62,7 @@ public class GeminiService implements AIServiceInterface {
                     "Помни что тебе в итоге надо сделать 3 заданий, а не 1\n" +
                     "Вот тебе твое первое слово - ";
 
-    private GeminiService() {}
+    public GeminiService() {}
 
     @Override
     public void addWord(String word) {
@@ -168,9 +167,5 @@ public class GeminiService implements AIServiceInterface {
             data.add(line.trim());
         }
         return data;
-    }
-
-    public static GeminiService getInstance() {
-        return instance;
     }
 }

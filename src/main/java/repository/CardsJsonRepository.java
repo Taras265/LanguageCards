@@ -3,7 +3,7 @@ package repository;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import models.Card;
+import model.Card;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,20 +11,14 @@ import java.util.ArrayList;
 
 public class CardsJsonRepository implements CardsRepositoryInterface {
 
-    private static final CardsJsonRepository instance = new CardsJsonRepository();
-
     private final File file = new File("cards.json");
     private final ObjectMapper mapper = new ObjectMapper();
 
     private ArrayList<Card> cache = new ArrayList<>();
 
-    private CardsJsonRepository() {
+    public CardsJsonRepository() {
         mapper.registerModule(new JavaTimeModule());
         load();
-    }
-
-    public static CardsJsonRepository getInstance() {
-        return instance;
     }
 
     private void load() {
