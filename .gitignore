@@ -5,6 +5,7 @@ target/
 
 out/
 cards.json
+backups/
 
 ### IntelliJ IDEA ###
 .idea/modules.xml
