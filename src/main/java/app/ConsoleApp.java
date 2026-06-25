@@ -60,6 +60,7 @@ public class ConsoleApp {
         cardController.createCards();
         ArrayList<Card> cards = cardController.getTodayCards(maxCards);
         while (!cards.isEmpty()) {
+            System.out.println("Количество карточек осталось: " + cards.size());
             for (Card card : cards) {
                 Task task = cardController.getTaskForCard(card);
 

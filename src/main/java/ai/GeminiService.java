@@ -11,14 +11,15 @@ public class GeminiService implements AIServiceInterface {
     private HashSet<String> words = new HashSet<>();
     private final Client client = Client.builder()
             .apiKey(System.getenv("GEMINI_API_KEY")).build();
-    // private final String model = "gemini-2.5-flash";
-    private final String model = "gemini-2.5-flash-lite";
+    private final String model = "gemini-2.5-flash";
+    // private final String model = "gemini-2.5-flash-lite";
 
     private static final String createCardsPrompt =
             "Я буду кидать тебе слово или несколько слова на английском. " +
                     "Ты будешь кидать же сразу следующий ответ с новой строчки:\n" +
                     "word: что за слово (с маленькой буквы)\n" +
-                    "meaning: объяснение слова на английском (максимально простым английским)\n" +
+                    "meaning: объяснение слова на английском (максимально простым английским, " +
+                    "не используя самого слова)\n" +
                     "example1: пример использования слова в предложении\n" +
                     "example2: пример использования слова в предложении\n" +
                     "example3: пример использования слова в предложении\n" +

@@ -1,6 +1,7 @@
 package controller;
 
 import ai.AIServiceInterface;
+import com.google.genai.errors.ServerException;
 import factory.TaskFactory;
 import factory.TaskFactoryResult;
 import model.Card;
@@ -56,7 +57,12 @@ public class CardController {
 
     public Task getTaskForCard(Card card) {
         while (true) {
-            TaskFactoryResult taskResult = TaskFactory.getTask(card);
+            TaskFactoryResult taskResult;
+            try {
+                taskResult = TaskFactory.getTask(card);
+            } catch (ServerException e) {
+                return TaskFactory.createFallbackTask(card);
+            }
             switch (taskResult) {
                 case TaskFactoryResult.Success success -> {
                     return success.task();
@@ -70,8 +76,12 @@ public class CardController {
                     cardRepository.updateCard(card);
                 }
                 case TaskFactoryResult.NeedsMastery ignored -> {
-                    ArrayList<String> mastery = aiService.createMasteries(card.getWord());
-                    if (mastery.isEmpty()) return TaskFactory.createFallbackTask(card);
+                    ArrayList<String> mastery;
+                    try {
+                        mastery = aiService.createMasteries(card.getWord());
+                    } catch (ServerException e) {
+                        return TaskFactory.createFallbackTask(card);
+                    }
 
                     card.addMastery(mastery);
                     cardRepository.updateCard(card);
