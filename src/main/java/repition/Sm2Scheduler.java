@@ -3,8 +3,10 @@ package repition;
 import model.Card;
 
 import java.time.LocalDate;
+import java.util.Random;
 
 public class Sm2Scheduler implements SpacedRepetitionScheduler {
+    private Random random = new Random();
 
     public void reviewCard(Card card, int quality, int taskLevel) {
         // обновляем ef
@@ -32,6 +34,8 @@ public class Sm2Scheduler implements SpacedRepetitionScheduler {
         card.setRepetitions(repetitions);
 
         int interval = (int) Math.round((stability * card.getLevelMod()) / difficulty);
+        double perc = random.nextDouble(-0.1, 0.1);
+        interval = (int) (interval + (interval * perc));
 
         if (interval < 1) {
             interval = 1;

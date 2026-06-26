@@ -75,6 +75,9 @@ public class ConsoleApp {
                 System.out.println("\t 1 - Почти не помню");
                 System.out.println("\t 0 - Не помню");
 
+                System.out.println("Услышать слово можно перейдя по следующей ссылке: ");
+                System.out.println("https://clip.cafe/s/" + card.getWord());
+
                 do {
                     choice = input.nextLine();
                 } while (!choice.equals("0") &&
