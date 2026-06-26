@@ -2,45 +2,37 @@ package repository;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import models.Card;
-import dto.CardDTO;
-import mapper.CardMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import model.Card;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.stream.Collectors;
 
 public class CardsJsonRepository implements CardsRepositoryInterface {
 
-    private static final CardsJsonRepository instance = new CardsJsonRepository();
-
     private final File file = new File("cards.json");
+    private final File backupDir = new File("backups");
     private final ObjectMapper mapper = new ObjectMapper();
 
     private ArrayList<Card> cache = new ArrayList<>();
 
-    private CardsJsonRepository() {
+    public CardsJsonRepository() {
+        mapper.registerModule(new JavaTimeModule());
+        if (!backupDir.exists()) {
+            backupDir.mkdirs();
+        }
         load();
-    }
-
-    public static CardsJsonRepository getInstance() {
-        return instance;
     }
 
     private void load() {
         if (!file.exists()) return;
 
         try {
-            ArrayList<CardDTO> dtos = mapper.readValue(
-                    file,
-                    new TypeReference<ArrayList<CardDTO>>() {}
-            );
-
-            cache = dtos.stream()
-                    .map(CardMapper::fromDTO)
-                    .collect(Collectors.toCollection(ArrayList::new));
-
+            cache = mapper.readValue(file, new TypeReference<ArrayList<Card>>() {});
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -48,15 +40,30 @@ public class CardsJsonRepository implements CardsRepositoryInterface {
 
     private void save() {
         try {
-            ArrayList<CardDTO> dtos = cache.stream()
-                    .map(CardMapper::toDTO)
-                    .collect(Collectors.toCollection(ArrayList::new));
+            mapper.writerWithDefaultPrettyPrinter().writeValue(file, cache);
 
-            mapper.writerWithDefaultPrettyPrinter()
-                    .writeValue(file, dtos);
-
+            String todayStr = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE);
+            File backupFile = new File(backupDir, "cards_" + todayStr + ".json");
+            mapper.writerWithDefaultPrettyPrinter().writeValue(backupFile, cache);
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void restoreFromDate(LocalDate date) {
+        String dateStr = date.format(DateTimeFormatter.ISO_LOCAL_DATE);
+        File backupFile = new File(backupDir, "cards_" + dateStr + ".json");
+
+        if (!backupFile.exists()) {
+            throw new IllegalArgumentException("Бэкап за дату " + dateStr + " не найден.");
+        }
+
+        try {
+            cache = mapper.readValue(backupFile, new TypeReference<ArrayList<Card>>() {});
+            mapper.writerWithDefaultPrettyPrinter().writeValue(file, cache);
+        } catch (IOException e) {
+            throw new RuntimeException("Не удалось восстановить данные: " + e.getMessage(), e);
         }
     }
 

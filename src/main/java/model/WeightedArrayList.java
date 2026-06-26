@@ -1,4 +1,4 @@
-package models;
+package model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -69,20 +69,12 @@ public class WeightedArrayList<T> {
         }
     }
 
-    public Item<T> getRaw(int index) {
-        return list.get(index);
-    }
-
-    public void clear() {
-        list.clear();
-    }
-
-    public void addDirect(T item, double weight) {
-        list.add(new Item<>(item, weight));
-    }
-
     public String toString() {
         return list.toString();
+    }
+
+    public ArrayList<Item<T>> getList() {
+        return list;
     }
 
     public static class Item<T> {
@@ -116,4 +108,5 @@ public class WeightedArrayList<T> {
             return item + " : " + weight;
         }
     }
+
 }

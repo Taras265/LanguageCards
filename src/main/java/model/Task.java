@@ -1,4 +1,4 @@
-package models;
+package model;
 
 public class Task {
     private final String task;

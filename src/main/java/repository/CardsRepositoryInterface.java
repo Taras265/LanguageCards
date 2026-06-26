@@ -1,10 +1,13 @@
 package repository;
 
-import models.Card;
+import model.Card;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 
 public interface CardsRepositoryInterface {
+    void restoreFromDate(LocalDate date);
+
     ArrayList<Card> getCards();
     void addCard(Card card);
     void addCards(ArrayList<Card> cards);

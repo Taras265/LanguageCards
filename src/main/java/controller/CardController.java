@@ -1,8 +1,12 @@
 package controller;
 
-import ai.GeminiService;
-import models.Card;
-import repository.CardsJsonRepository;
+import ai.AIServiceInterface;
+import com.google.genai.errors.ServerException;
+import factory.TaskFactory;
+import factory.TaskFactoryResult;
+import model.Card;
+import model.Task;
+import repition.Sm2Scheduler;
 import repository.CardsRepositoryInterface;
 
 import java.util.ArrayList;
@@ -10,21 +14,22 @@ import java.util.Comparator;
 import java.util.List;
 
 public class CardController {
-    private static final CardController instance = new CardController();
-    private final CardsRepositoryInterface rep = CardsJsonRepository.getInstance();
-    private final GeminiService geminiService = GeminiService.getInstance();
+    private final CardsRepositoryInterface cardRepository;
+    private final AIServiceInterface aiService;
+    private static final Sm2Scheduler cardScheduler = new Sm2Scheduler();
 
-    private CardController() {}
-
-    public static CardController getInstance() {
-        return instance;
+    public CardController(CardsRepositoryInterface cRep, AIServiceInterface aiServ) {
+        cardRepository = cRep;
+        aiService = aiServ;
     }
 
-    public ArrayList<Card> getTodayCards(int newCards,
-                                         int lvl1Cards,
-                                         int lvl2Cards,
-                                         int lvl3Cards) {
-        List<Card> cards = rep.getCards().stream()
+    public ArrayList<Card> getTodayCards(int cardsNum) {
+        int newCards = (int) Math.ceil(cardsNum*0.2);
+        int lvl1Cards = (int) Math.ceil(cardsNum*0.3);
+        int lvl2Cards = (int) Math.ceil(cardsNum*0.4);
+        int lvl3Cards = (int) Math.ceil(cardsNum*0.1);
+
+        List<Card> cards = cardRepository.getCards().stream()
                 .filter(Card::isDue).sorted(Comparator.comparing(Card::getNextReview)).toList();
         List<Card> newArray = cards.stream()
                 .filter(c -> (c.getLevel() == 1 && c.getEf() == Card.startEF))
@@ -50,21 +55,61 @@ public class CardController {
         return result;
     }
 
+    public Task getTaskForCard(Card card) {
+        while (true) {
+            TaskFactoryResult taskResult;
+            try {
+                taskResult = TaskFactory.getTask(card);
+            } catch (ServerException e) {
+                return TaskFactory.createFallbackTask(card);
+            }
+            switch (taskResult) {
+                case TaskFactoryResult.Success success -> {
+                    return success.task();
+                }
+                case TaskFactoryResult.NeedsExamples ignored -> {
+                    ArrayList<String> examples = aiService.createExamples(card.getWord());
+                    // если что то произошло и в итоге не вернули данные - даем другую карточку
+                    if (examples.isEmpty()) return TaskFactory.createFallbackTask(card);
+
+                    card.addExamples(examples);
+                    cardRepository.updateCard(card);
+                }
+                case TaskFactoryResult.NeedsMastery ignored -> {
+                    ArrayList<String> mastery;
+                    try {
+                        mastery = aiService.createMasteries(card.getWord());
+                    } catch (ServerException e) {
+                        return TaskFactory.createFallbackTask(card);
+                    }
+
+                    card.addMastery(mastery);
+                    cardRepository.updateCard(card);
+                }
+            }
+        }
+    }
+
     public void createCards(ArrayList<String> c) {
-        c.forEach(geminiService::addWord);
+        c.forEach(aiService::addWord);
         createCards();
     }
     public void createCards() {
-        if (geminiService.haveWords()) {
-            rep.addCards(geminiService.createCards());
+        if (aiService.haveWords()) {
+            cardRepository.addCards(aiService.createCards());
         }
     }
 
     public void updateCard(Card c) {
-        rep.updateCard(c);
+        cardRepository.updateCard(c);
     }
 
     public void addCard(String card) {
-        geminiService.addWord(card);
+        aiService.addWord(card);
+    }
+
+    public void reviewCard(Card card, int choice, int level) {
+        cardScheduler.reviewCard(card, choice, level);
+        cardRepository.updateCard(card);
     }
 }
