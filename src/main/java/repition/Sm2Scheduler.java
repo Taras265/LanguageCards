@@ -28,21 +28,26 @@ public class Sm2Scheduler implements SpacedRepetitionScheduler {
             repetitions = 0;
         } else {
             stability *= ef;  // рост экспоненциальный у стабильности
-            repetitions++;
         }
         card.setStability(stability);
-        card.setRepetitions(repetitions);
 
         int interval = (int) Math.round((stability * card.getLevelMod()) / difficulty);
         double perc = random.nextDouble(-0.1, 0.1);
+        System.out.println(perc);
         interval = (int) (interval + (interval * perc));
 
         if (interval < 1) {
             interval = 1;
         } else {
             System.out.println(interval);
+            int result = quality-2;
+            if (result > 0) {
+                repetitions += result;
+                System.out.println(result);
+            }
             card.setNextReview(LocalDate.now().plusDays(interval));
         }
+        card.setRepetitions(repetitions);
 
         card.setInterval(interval);
 
@@ -50,7 +55,7 @@ public class Sm2Scheduler implements SpacedRepetitionScheduler {
         if (taskLevel < level && repetitions == 0) {
             card.levelDown();
         }
-        if (repetitions >= 6*level && level < 3) {
+        if (repetitions >= 4*level && level < Card.MAXLEVEL) {
             card.levelUp();
             card.setRepetitions(0);
             card.setEf(Card.startEF);

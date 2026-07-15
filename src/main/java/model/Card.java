@@ -30,7 +30,7 @@ public class Card {
     private double difficulty = 1.0;  // сложность карточки
 
     public static final double startEF = 2.5;
-    public static final int MAXLEVEL = 3;
+    public static final int MAXLEVEL = 4;
 
     public Card() {
         this.examples = new WeightedArrayList<>();
@@ -161,7 +161,10 @@ public class Card {
     public double getLevelMod() {
         if (level == 1) {
             return 1;
-        } else if (level == 2) {
+        } else
+        if (level == 2) {
+            return 1;
+        } else if (level == 3) {
             return 0.2;
         } else {
             return 1;

@@ -11,7 +11,8 @@ public class TaskFactory {
         return switch (card.getLevel()) {
             case 1 -> new TaskFactoryResult.Success(createFirstLevelTask(card));
             case 2 -> createSecondLevelTask(card);
-            default -> createThirdLevelTask(card);
+            case 3 -> createThirdLevelTask(card);
+            default -> createFourthLevelTask(card);
         };
     }
 
@@ -21,13 +22,30 @@ public class TaskFactory {
 
     private static Task createFirstLevelTask(Card card) {
         ArrayList<String> taskArguments = new ArrayList<>();
-        taskArguments.add(card.getWord());
         taskArguments.add(card.getDescription());
+        taskArguments.add(card.getWord());
         Collections.shuffle(taskArguments);
         return new Task(taskArguments.getFirst(), taskArguments.getLast(), 1);
     }
 
     private static TaskFactoryResult createSecondLevelTask(Card card) {
+        String example = card.getExamples().getRandom();
+
+        if (example == null) {
+            return new TaskFactoryResult.NeedsExamples();
+        }
+
+        String word = card.getWord();
+
+        example = example + "\n\n" + "What does the word \"" +
+                card.getWord() +
+                "\" mean here?";
+        return new TaskFactoryResult.Success(
+                new Task(example, word, 2)
+        );
+    }
+
+    private static TaskFactoryResult createThirdLevelTask(Card card) {
         String example = card.getExamples().getRandom();
 
         if (example == null) {
@@ -43,7 +61,7 @@ public class TaskFactory {
         );
     }
 
-    private static TaskFactoryResult createThirdLevelTask(Card card) {
+    private static TaskFactoryResult createFourthLevelTask(Card card) {
         ArrayList<String> mastery = card.getMastery();
         if (mastery.isEmpty()) {
             return new TaskFactoryResult.NeedsMastery();

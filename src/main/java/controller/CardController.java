@@ -25,9 +25,10 @@ public class CardController {
 
     public ArrayList<Card> getTodayCards(int cardsNum) {
         int newCards = (int) Math.ceil(cardsNum*0.2);
-        int lvl1Cards = (int) Math.ceil(cardsNum*0.3);
-        int lvl2Cards = (int) Math.ceil(cardsNum*0.4);
-        int lvl3Cards = (int) Math.ceil(cardsNum*0.1);
+        int lvl1Cards = (int) Math.ceil(cardsNum*0.2);
+        int lvl2Cards = (int) Math.ceil(cardsNum*0.2);
+        int lvl3Cards = (int) Math.ceil(cardsNum*0.3);
+        int lvl4Cards = (int) Math.ceil(cardsNum*0.1);
 
         List<Card> cards = cardRepository.getCards().stream()
                 .filter(Card::isDue).sorted(Comparator.comparing(Card::getNextReview)).toList();
@@ -47,11 +48,16 @@ public class CardController {
                 .filter(c -> c.getLevel() == 3)
                 .limit(lvl3Cards)
                 .toList();
+        List<Card> lvl4Array = cards.stream()
+                .filter(c -> c.getLevel() >= 4)
+                .limit(lvl4Cards)
+                .toList();
         ArrayList<Card> result = new ArrayList<>();
         result.addAll(newArray);
         result.addAll(lvl1Array);
         result.addAll(lvl2Array);
         result.addAll(lvl3Array);
+        result.addAll(lvl4Array);
         return result;
     }
 

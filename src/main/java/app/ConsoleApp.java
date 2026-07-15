@@ -7,6 +7,7 @@ import model.Task;
 import repition.Sm2Scheduler;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Scanner;
 
 public class ConsoleApp {
@@ -91,6 +92,9 @@ public class ConsoleApp {
                 System.out.println("Следующий повтор: " + card.getNextReview());
             }
             cards.removeIf(c -> !c.isDue());
+            if (!cards.isEmpty()) {
+                Collections.shuffle(cards);
+            }
         }
         System.out.println("Карточки закончились >.<");
         askToDo();
