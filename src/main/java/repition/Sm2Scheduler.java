@@ -33,7 +33,6 @@ public class Sm2Scheduler implements SpacedRepetitionScheduler {
 
         int interval = (int) Math.round((stability * card.getLevelMod()) / difficulty);
         double perc = random.nextDouble(-0.1, 0.1);
-        System.out.println(perc);
         interval = (int) (interval + (interval * perc));
 
         if (interval < 1) {
@@ -49,16 +48,17 @@ public class Sm2Scheduler implements SpacedRepetitionScheduler {
         }
         card.setRepetitions(repetitions);
 
-        card.setInterval(interval);
-
         int level = card.getLevel();
         if (taskLevel < level && repetitions == 0) {
             card.levelDown();
+            interval = 1;
         }
         if (repetitions >= 4*level && level < Card.MAXLEVEL) {
             card.levelUp();
             card.setRepetitions(0);
             card.setEf(Card.startEF);
+            interval = 1;
         }
+        card.setInterval(interval);
     }
 }

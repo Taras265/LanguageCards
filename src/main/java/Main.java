@@ -1,7 +1,6 @@
 import ai.AIServiceInterface;
 import ai.GeminiService;
-import app.ConsoleApp;
-import controller.CardController;
+import controller.ConsoleCardController;
 import repository.CardsJsonRepository;
 import repository.CardsRepositoryInterface;
 
@@ -10,9 +9,8 @@ public class Main {
         CardsRepositoryInterface cardRepository = new CardsJsonRepository();
         AIServiceInterface aiService = new GeminiService();
 
-        CardController cardController = new CardController(cardRepository, aiService);
+        ConsoleCardController consoleCardController = new ConsoleCardController(cardRepository, aiService);
 
-        ConsoleApp app = new ConsoleApp(cardController);
-        app.start(35);
+        consoleCardController.start(35);
     }
 }

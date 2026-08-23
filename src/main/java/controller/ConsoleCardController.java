@@ -1,22 +1,19 @@
-package app;
+package controller;
 
-import controller.CardController;
-import factory.TaskFactory;
+import ai.AIServiceInterface;
 import model.Card;
 import model.Task;
-import repition.Sm2Scheduler;
+import repository.CardsRepositoryInterface;
+import service.CardService;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Scanner;
+import java.util.*;
 
-public class ConsoleApp {
-    CardController cardController;
+public class ConsoleCardController {
+    private final CardService cardService;
 
-    public ConsoleApp(CardController cardController) {
-        this.cardController = cardController;
+    public ConsoleCardController(CardsRepositoryInterface cRep, AIServiceInterface aiServ) {
+        cardService = new CardService(cRep, aiServ);
     }
-
     public void start(int maxCards) {
         System.out.println("Приветствую в приложении \"Language Card\"!");
         askToDo();
@@ -29,14 +26,14 @@ public class ConsoleApp {
                 System.out.println("Введите слово на английском, которое вы хотите запомнить.");
                 System.out.println("Что бы прекратить ввод, введите \"-1\" :)");
                 while (!(choice = input.nextLine()).equals("-1")) {
-                    cardController.addCard(choice);
+                    cardService.addCard(choice);
                 }
                 System.out.println("Подождите, карточки создаются. Извините за ожидение >.<");
-                cardController.createCards();
+                cardService.createCards();
                 askToDo();
             } else if (choice.equals("3")) {
                 System.out.println("Введите слово на английском, которое вы хотите запомнить: ");
-                cardController.addCard(input.nextLine());
+                cardService.addCard(input.nextLine());
                 askToDo();
                 System.out.println("Создаем карточки... Извините, если это займет какое то время >.<");
             } else {
@@ -55,15 +52,28 @@ public class ConsoleApp {
     }
 
     private void getTodayCards(Scanner input, int maxCards) {
+//        int newCards = (int) Math.ceil(maxCards*0.2);
+//        int lvl1Cards = (int) Math.ceil(maxCards*0.2);
+//        int lvl2Cards = (int) Math.ceil(maxCards*0.2);
+//        int lvl3Cards = (int) Math.ceil(maxCards*0.3);
+//        int lvl4Cards = (int) Math.ceil(maxCards*0.1);
+        // int newCards = 10;
+        int newCards = 0;
+        int lvl1Cards = 15;
+        int lvl2Cards = 20;
+        int lvl3Cards = 20;
+        int lvl4Cards = 2;
+
         String choice;
 
         System.out.println("Грузим карточки... Извините, если это займет какое то время >.<");
-        cardController.createCards();
-        ArrayList<Card> cards = cardController.getTodayCards(maxCards);
+        cardService.createCards();
+        ArrayList<Card> cards = cardService.getTodayCards(newCards, lvl1Cards,
+                lvl2Cards, lvl3Cards, lvl4Cards);
         while (!cards.isEmpty()) {
             System.out.println("Количество карточек осталось: " + cards.size());
             for (Card card : cards) {
-                Task task = cardController.getTaskForCard(card);
+                Task task = cardService.getTaskForCard(card);
 
                 System.out.println(task.getTask());
                 input.nextLine();
@@ -88,7 +98,7 @@ public class ConsoleApp {
                         !choice.equals("4") &&
                         !choice.equals("5"));
 
-                cardController.reviewCard(card, Integer.parseInt(choice), task.getLevel());
+                cardService.reviewCard(card, Integer.parseInt(choice), task.getLevel());
                 System.out.println("Следующий повтор: " + card.getNextReview());
             }
             cards.removeIf(c -> !c.isDue());

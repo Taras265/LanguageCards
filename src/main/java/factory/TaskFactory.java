@@ -35,13 +35,11 @@ public class TaskFactory {
             return new TaskFactoryResult.NeedsExamples();
         }
 
-        String word = card.getWord();
-
         example = example + "\n\n" + "What does the word \"" +
                 card.getWord() +
                 "\" mean here?";
         return new TaskFactoryResult.Success(
-                new Task(example, word, 2)
+                new Task(example, card.getDescription(), 2)
         );
     }
 
@@ -57,7 +55,7 @@ public class TaskFactory {
         example = example.replaceAll(word, "---");
         example = example + "\n\n" + card.getDescription();
         return new TaskFactoryResult.Success(
-                new Task(example, word, 2)
+                new Task(example, card.getDescription(), 3)
         );
     }
 
@@ -72,7 +70,7 @@ public class TaskFactory {
 
         String task = "Create sentence with using word \"" + card.getWord() + "\"\n" + m;
         return new TaskFactoryResult.Success(
-                new Task(task, "", 3)
+                new Task(task, "", 4)
         );
     }
 }

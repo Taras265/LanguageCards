@@ -64,7 +64,12 @@ public class WeightedArrayList<T> {
             if (i != index) {
                 Item<T> item = list.get(i);
                 double weight = item.getWeight();
-                item.setWeight(weight + (delta * (weight / (1-(delta*2)))));
+                double dec = 1-(delta*2);
+                if (dec == 0) {
+                    setSameWeights();
+                    break;
+                }
+                item.setWeight(weight + (delta * (weight / dec)));
             }
         }
     }

@@ -1,4 +1,4 @@
-package controller;
+package service;
 
 import ai.AIServiceInterface;
 import com.google.genai.errors.ServerException;
@@ -13,23 +13,18 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-public class CardController {
+public class CardService {
     private final CardsRepositoryInterface cardRepository;
     private final AIServiceInterface aiService;
     private static final Sm2Scheduler cardScheduler = new Sm2Scheduler();
 
-    public CardController(CardsRepositoryInterface cRep, AIServiceInterface aiServ) {
+    public CardService(CardsRepositoryInterface cRep, AIServiceInterface aiServ) {
         cardRepository = cRep;
         aiService = aiServ;
     }
 
-    public ArrayList<Card> getTodayCards(int cardsNum) {
-        int newCards = (int) Math.ceil(cardsNum*0.2);
-        int lvl1Cards = (int) Math.ceil(cardsNum*0.2);
-        int lvl2Cards = (int) Math.ceil(cardsNum*0.2);
-        int lvl3Cards = (int) Math.ceil(cardsNum*0.3);
-        int lvl4Cards = (int) Math.ceil(cardsNum*0.1);
-
+    public ArrayList<Card> getTodayCards(int newCards, int lvl1Cards,
+                                         int lvl2Cards, int lvl3Cards, int lvl4Cards) {
         List<Card> cards = cardRepository.getCards().stream()
                 .filter(Card::isDue).sorted(Comparator.comparing(Card::getNextReview)).toList();
         List<Card> newArray = cards.stream()
@@ -66,7 +61,7 @@ public class CardController {
             TaskFactoryResult taskResult;
             try {
                 taskResult = TaskFactory.getTask(card);
-            } catch (ServerException e) {
+            } catch (Exception e) {
                 return TaskFactory.createFallbackTask(card);
             }
             switch (taskResult) {
