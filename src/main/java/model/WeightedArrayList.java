@@ -3,10 +3,11 @@ package model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 public class WeightedArrayList<T> {
-    private final ArrayList<Item<T>> list = new ArrayList<>();
+    private final List<Item<T>> list = new ArrayList<>();
     @JsonIgnore
     private final Random random = new Random();
 
@@ -27,13 +28,13 @@ public class WeightedArrayList<T> {
         list.add(i);
     }
 
-    public void addFromList(ArrayList<T> l) {
+    public void addFromList(List<T> l) {
         for (T item:  l) {
             add(item);
         }
     }
 
-    public T getRandom() {
+    public T getRandomItem() {
         double randomNumber = random.nextDouble();
         double current = 0d;
         for (int i=0; i<size(); i++) {
@@ -49,6 +50,10 @@ public class WeightedArrayList<T> {
     }
 
     public void setSameWeights() {
+        if (list.isEmpty()) {
+            return;
+        }
+
         double w = 1d / size();
         for (Item<T> item: list) {
             item.setWeight(w);
@@ -78,15 +83,13 @@ public class WeightedArrayList<T> {
         return list.toString();
     }
 
-    public ArrayList<Item<T>> getList() {
+    public List<Item<T>> getList() {
         return list;
     }
 
     public static class Item<T> {
         private T item;
         private double weight;
-
-        public Item() {}
 
         Item(T item, double weight) {
             this.item = item;

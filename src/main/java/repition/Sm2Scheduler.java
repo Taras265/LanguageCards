@@ -6,9 +6,9 @@ import java.time.LocalDate;
 import java.util.Random;
 
 public class Sm2Scheduler implements SpacedRepetitionScheduler {
-    private Random random = new Random();
+    private final Random random = new Random();
 
-    public void reviewCard(Card card, int quality, int taskLevel) {
+    public void reviewCard(Card card, int quality) {
         // обновляем ef
         double ef = card.getEf() + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02));
         ef = Math.max(1.3, ef);
@@ -31,34 +31,66 @@ public class Sm2Scheduler implements SpacedRepetitionScheduler {
         }
         card.setStability(stability);
 
-        int interval = (int) Math.round((stability * card.getLevelMod()) / difficulty);
-        double perc = random.nextDouble(-0.1, 0.1);
-        interval = (int) (interval + (interval * perc));
+        int interval = calculateInterval(
+                card.getLevel(),
+                stability,
+                difficulty
+        );
 
         if (interval < 1) {
-            interval = 1;
-        } else {
-            System.out.println(interval);
-            int result = quality-2;
-            if (result > 0) {
-                repetitions += result;
-                System.out.println(result);
-            }
-            card.setNextReview(LocalDate.now().plusDays(interval));
+            card.setInterval(1);
+            card.setRepetitions(repetitions);
+            return;
         }
-        card.setRepetitions(repetitions);
+
+        // Учитываем только успешные повторения,
+        // после которых карточка переносится на другой день.
+        int result = quality - 2;
+        if (result > 0) {
+            repetitions += result;
+        }
+
 
         int level = card.getLevel();
-        if (taskLevel < level && repetitions == 0) {
-            card.levelDown();
-            interval = 1;
-        }
         if (repetitions >= 4*level && level < Card.MAXLEVEL) {
             card.levelUp();
-            card.setRepetitions(0);
+            repetitions = 0;
             card.setEf(Card.startEF);
             interval = 1;
         }
         card.setInterval(interval);
+        card.setRepetitions(repetitions);
+        card.setNextReview(LocalDate.now().plusDays(interval));
+    }
+
+    private int calculateInterval(
+            int level,
+            double stability,
+            double difficulty
+    ) {
+        int interval = (int) Math.round(
+                stability * getLevelMod(level) / difficulty
+        );
+
+        return addRandomVariation(interval);
+    }
+
+
+    private double getLevelMod(int level) {
+        if (level == 1) {
+            return 1;
+        } else
+        if (level == 2) {
+            return 1;
+        } else if (level == 3) {
+            return 0.2;
+        } else {
+            return 1;
+        }
+    }
+
+    private int addRandomVariation(int interval) {
+        double perc = random.nextDouble(-0.1, 0.1);
+        return (int) (interval + interval * perc);
     }
 }
