@@ -1,18 +1,22 @@
 import ai.AIServiceInterface;
 import ai.GeminiService;
-import app.ConsoleApp;
-import controller.CardController;
+import controller.ConsoleCardController;
+import repition.Sm2Scheduler;
 import repository.CardsJsonRepository;
 import repository.CardsRepositoryInterface;
+import service.CardService;
+import view.ConsoleCardView;
 
 public class Main {
     public static void main(String[] args) {
         CardsRepositoryInterface cardRepository = new CardsJsonRepository();
         AIServiceInterface aiService = new GeminiService();
 
-        CardController cardController = new CardController(cardRepository, aiService);
+        CardService service = new CardService(cardRepository, aiService, new Sm2Scheduler());
+        ConsoleCardView view = new ConsoleCardView();
 
-        ConsoleApp app = new ConsoleApp(cardController);
-        app.start(35);
+        ConsoleCardController consoleCardController = new ConsoleCardController(service, view);
+
+        consoleCardController.start(); // 35 cards
     }
 }

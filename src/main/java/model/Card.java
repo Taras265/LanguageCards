@@ -1,7 +1,5 @@
 package model;
 
-import ai.AIServiceInterface;
-import ai.GeminiService;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -10,12 +8,13 @@ import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.List;
 
 public class Card {
     private String word;
     private String description;
-    private WeightedArrayList<String> examples;
-    private ArrayList<String> mastery;
+    private final WeightedArrayList<String> examples;
+    private final List<String> mastery;
     private int level = 1;
 
     // SM2
@@ -30,15 +29,15 @@ public class Card {
     private double difficulty = 1.0;  // сложность карточки
 
     public static final double startEF = 2.5;
-    public static final int MAXLEVEL = 3;
+    public static final int MAXLEVEL = 4;
 
     public Card() {
         this.examples = new WeightedArrayList<>();
         this.mastery = new ArrayList<>();
     }
     
-    public Card(String word, String description, ArrayList<String> examples,
-                ArrayList<String> mastery) {
+    public Card(String word, String description, List<String> examples,
+                List<String> mastery) {
         this.word = word;
         this.description = description;
 
@@ -72,7 +71,7 @@ public class Card {
         return examples;
     }
 
-    public ArrayList<String> getMastery() {
+    public List<String> getMastery() {
         return mastery;
     }
 
@@ -81,7 +80,7 @@ public class Card {
     }
 
     public void levelUp() {
-        if (level < MAXLEVEL && nextReview.isAfter(LocalDate.now())) {
+        if (level < MAXLEVEL) {
             level++;
         }
     }
@@ -101,11 +100,11 @@ public class Card {
         return !LocalDate.now().isBefore(nextReview);
     }
 
-    public void addExamples(ArrayList<String> e) {
+    public void addExamples(List<String> e) {
         examples.addFromList(e);
     }
 
-    public void addMastery(ArrayList<String> s) {
+    public void addMastery(List<String> s) {
         mastery.addAll(s);
     }
 
@@ -158,13 +157,18 @@ public class Card {
     }
 
     @JsonIgnore
-    public double getLevelMod() {
-        if (level == 1) {
-            return 1;
-        } else if (level == 2) {
-            return 0.2;
-        } else {
-            return 1;
+    public boolean isNew() {
+        return getLevel() == 1 && getEf() == Card.startEF;
+    }
+
+    @JsonIgnore
+    public String takeMastery() {
+        if (mastery.isEmpty()) {
+            return null;
         }
+
+        String m = mastery.getFirst();
+        mastery.removeFirst();
+        return m;
     }
 }

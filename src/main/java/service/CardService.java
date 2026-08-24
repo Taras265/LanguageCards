@@ -1,4 +1,4 @@
-package controller;
+package service;
 
 import ai.AIServiceInterface;
 import com.google.genai.errors.ServerException;
@@ -6,33 +6,32 @@ import factory.TaskFactory;
 import factory.TaskFactoryResult;
 import model.Card;
 import model.Task;
-import repition.Sm2Scheduler;
+import repition.SpacedRepetitionScheduler;
 import repository.CardsRepositoryInterface;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-public class CardController {
+public class CardService {
     private final CardsRepositoryInterface cardRepository;
     private final AIServiceInterface aiService;
-    private static final Sm2Scheduler cardScheduler = new Sm2Scheduler();
+    private final SpacedRepetitionScheduler cardScheduler;
 
-    public CardController(CardsRepositoryInterface cRep, AIServiceInterface aiServ) {
+    public CardService(CardsRepositoryInterface cRep,
+                       AIServiceInterface aiServ,
+                       SpacedRepetitionScheduler scheduler) {
         cardRepository = cRep;
         aiService = aiServ;
+        cardScheduler = scheduler;
     }
 
-    public ArrayList<Card> getTodayCards(int cardsNum) {
-        int newCards = (int) Math.ceil(cardsNum*0.2);
-        int lvl1Cards = (int) Math.ceil(cardsNum*0.3);
-        int lvl2Cards = (int) Math.ceil(cardsNum*0.4);
-        int lvl3Cards = (int) Math.ceil(cardsNum*0.1);
-
+    public ArrayList<Card> getTodayCards(int newCards, int lvl1Cards,
+                                         int lvl2Cards, int lvl3Cards, int lvl4Cards) {
         List<Card> cards = cardRepository.getCards().stream()
                 .filter(Card::isDue).sorted(Comparator.comparing(Card::getNextReview)).toList();
         List<Card> newArray = cards.stream()
-                .filter(c -> (c.getLevel() == 1 && c.getEf() == Card.startEF))
+                .filter(Card::isNew)
                 .limit(newCards)
                 .toList();
         List<Card> lvl1Array = cards.stream()
@@ -47,11 +46,16 @@ public class CardController {
                 .filter(c -> c.getLevel() == 3)
                 .limit(lvl3Cards)
                 .toList();
+        List<Card> lvl4Array = cards.stream()
+                .filter(c -> c.getLevel() >= 4)
+                .limit(lvl4Cards)
+                .toList();
         ArrayList<Card> result = new ArrayList<>();
         result.addAll(newArray);
         result.addAll(lvl1Array);
         result.addAll(lvl2Array);
         result.addAll(lvl3Array);
+        result.addAll(lvl4Array);
         return result;
     }
 
@@ -60,7 +64,7 @@ public class CardController {
             TaskFactoryResult taskResult;
             try {
                 taskResult = TaskFactory.getTask(card);
-            } catch (ServerException e) {
+            } catch (Exception e) {
                 return TaskFactory.createFallbackTask(card);
             }
             switch (taskResult) {
@@ -94,6 +98,7 @@ public class CardController {
         c.forEach(aiService::addWord);
         createCards();
     }
+
     public void createCards() {
         if (aiService.haveWords()) {
             cardRepository.addCards(aiService.createCards());
@@ -108,8 +113,8 @@ public class CardController {
         aiService.addWord(card);
     }
 
-    public void reviewCard(Card card, int choice, int level) {
-        cardScheduler.reviewCard(card, choice, level);
+    public void reviewCard(Card card, int choice) {
+        cardScheduler.reviewCard(card, choice);
         cardRepository.updateCard(card);
     }
 }

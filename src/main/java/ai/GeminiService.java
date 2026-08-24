@@ -103,7 +103,6 @@ public class GeminiService implements AIServiceInterface {
                         null
                 );
         String answer = response.text();
-        System.out.println(answer);
         return stringToArray(answer);
     }
 
